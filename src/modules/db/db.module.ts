@@ -3,8 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigurationModule } from 'src/modules/config/configuration.module';
 import { ConfigurationService } from 'src/modules/config/configuration.service';
 import { UserModel } from './entities/user.entity';
+import { StatisticsModel } from './entities/statistics.entity';
+import { CountryModel } from './entities/country.entity';
 
-const entities = [UserModel];
+const entities = [UserModel, StatisticsModel, CountryModel];
 
 @Module({
   imports: [

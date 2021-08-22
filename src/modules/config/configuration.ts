@@ -15,6 +15,14 @@ export class Configuration {
     SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
     SENDGRID_TEMPLATE_ID: process.env.SENDGRID_TEMPLATE_ID,
   };
+  api = {
+    COUNTRIES_LIST_API: process.env.COUNTRIES_LIST_API,
+    COVID_STATISTICS_API: process.env.COVID_STATISTICS_API,
+    COVID_STATISTICS_API_KEY_HEADER:
+      process.env.COVID_STATISTICS_API_KEY_HEADER,
+    COVID_STATISTICS_API_HOST_HEADER:
+      process.env.COVID_STATISTICS_API_HOST_HEADER,
+  };
 }
 
 export const configuration = () => {

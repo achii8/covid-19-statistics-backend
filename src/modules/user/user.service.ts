@@ -1,5 +1,5 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { Repository } from 'typeorm';
@@ -35,7 +35,7 @@ export class UserService {
     const createdUser = await this.userRepository.save(user);
     const config = this.configService.getConfig();
     setApiKey(config.email.SENDGRID_API_KEY);
-    const resp = await send({
+    await send({
       from: 'archilivardidze@gmail.com',
       templateId: config.email.SENDGRID_TEMPLATE_ID,
       dynamicTemplateData: {
