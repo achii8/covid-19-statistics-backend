@@ -1,17 +1,20 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { HttpService, Injectable, Post } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpService,
+  Inject,
+  Injectable,
+  Post,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { ConfigurationService } from '../config/configuration.service';
 import { StatisticsModel } from '../db/entities/statistics.entity';
 import { CreateStatisticsDto } from './dto/create-statistics.dto';
-import { GetStatisticsDto } from './dto/get-statistics.dto';
 import { CountryService } from '../country/country.service';
-import { Observable } from 'rxjs';
-import { timer } from 'rxjs';
-import { take, delay, observeOn, } from 'rxjs/operators';
-import { interval, } from 'rxjs';
-import {  of, asyncScheduler, scheduled } from 'rxjs';
-
+import { CountryModel } from '../db/entities/country.entity';
+import { Errors } from 'src/error/errors';
+import { Cron } from '@nestjs/schedule';
+import { UpdateStatisticsDto } from './dto/update-statistics.dto';
 
 @Injectable()
 export class StatisticsService {
@@ -20,11 +23,15 @@ export class StatisticsService {
     private statisticsRepository: Repository<StatisticsModel>,
     private readonly configService: ConfigurationService,
     private readonly httpService: HttpService,
+    @Inject(forwardRef(() => CountryService))
     private readonly countryService: CountryService,
   ) {}
 
-  async getStatistics(query: GetStatisticsDto) {
-    const resp = await this.httpService
+  async getStatistics(allCountries: CountryModel[], currentIndex?: number) {
+    if (!currentIndex) {
+      currentIndex = 0;
+    }
+    await this.httpService
       .get(this.configService.getConfig().api.COVID_STATISTICS_API, {
         headers: {
           'x-rapidapi-key':
@@ -33,71 +40,65 @@ export class StatisticsService {
             this.configService.getConfig().api.COVID_STATISTICS_API_HOST_HEADER,
         },
         params: {
-          code: query.code,
+          code: allCountries[currentIndex].code,
         },
       })
       .toPromise()
-      .then((resp) => {
-        return resp.data;
+      .then(async (response) => {
+        const currentCountryUpdateTime =
+          allCountries[currentIndex].statistics &&
+          allCountries[currentIndex].statistics.lastUpdate
+            ? new Date(
+                allCountries[currentIndex].statistics.lastUpdate.toString(),
+              ).toISOString()
+            : null;
+        const recentStatUpdateTime =
+          response.data[0] && response.data[0].lastUpdate !== null
+            ? new Date(response.data[0]?.lastUpdate.toString()).toISOString()
+            : null;
+        if (
+          !currentCountryUpdateTime ||
+          !recentStatUpdateTime ||
+          currentCountryUpdateTime !== recentStatUpdateTime
+        ) {
+          if (response.data[0]) {
+            const recentStatistic = response.data[0];
+            const statistics = await this.statisticsRepository.save({
+              code: recentStatistic.code,
+              lastUpdate: recentStatistic.lastUpdate,
+              recovered: recentStatistic.recovered,
+              lastChange: recentStatistic.lastChange,
+              deaths: recentStatistic.deaths,
+              critical: recentStatistic.critical,
+              confirmed: recentStatistic.confirmed,
+              country: recentStatistic.country,
+            });
+            await this.countryService.updateOne(
+              allCountries[currentIndex].code,
+              {
+                statistics: statistics,
+              },
+            );
+          }
+        }
+        return response.data;
       });
-    return await this.createOne({
-      code: resp[0].code,
-      country: resp[0].country,
-      confirmed: resp[0].confirmed,
-      critical: resp[0].critical,
-      deaths: resp[0].deaths,
-      isRecent: true,
-      lastChange: resp[0].lastChange,
-      lastUpdate: resp[0].lastUpdate,
-      recovered: resp[0].recovered,
-    });
+    if (allCountries.length - 1 > currentIndex) {
+      setTimeout(async () => {
+        await this.getStatistics(allCountries, ++currentIndex);
+      }, 2000);
+    }
   }
 
-  sleep = (ms: number) => {
-    return new Promise((resolve) => {
-      setTimeout(resolve, ms);
-    });
-  };
-
+  @Cron('0 28 * * * *')
   async fetchStatistics() {
-    const allCountries = await this.countryService.fetchAll();
-    // const numbers = interval(1000);
-    // await Promise.all(allCountries.map(async (country) => {
-    //   const stat = await this.getStatistics({ code: country.code });
-    //   console.log("omaga",stat)
-    // })).then();
-    // const task = () => console.log('it works!');
-
-
-
-    // const api = 'https://reqres.in/api/users/';
-    // const urls = [1, 2, 3].map(id => api + id);
-    //
-    // from(urls).pipe(
-    //   mergeMap(url => mockHTTPRequest(url))
-    // ).subscribe(val => consol.log(val));
-    //
-    // function mockHTTPRequest(url) {
-    //   return of(`Response from ${url}`).pipe(
-    //     // responses come in a random order
-    //     delay(Math.random() * 1000)
-    //   );
-
-    // asyncScheduler.schedule(task, 2000);
-    //
-    // const observable = new Observable(function subscribe(subscriber) {
-    //     const id = setInterval(() => {
-    //       allCountries.forEach((country)=>{
-    //         asyncScheduler.schedule(()=>{subscriber.next({code: country.code})}, 1000)
-    //       })
-    //     }, 1000);
-    // });
-    // observable.subscribe((query) => {
-    //   console.log('query', query);
-    //   // this.getStatistics(query as any)
-    // });
-
+    const allCountries = await this.countryService.fetchAll({});
+    await this.getStatistics(allCountries);
     return null;
+  }
+
+  async list() {
+    return await this.statisticsRepository.find({});
   }
 
   async createOne(dto: CreateStatisticsDto) {
@@ -106,5 +107,23 @@ export class StatisticsService {
 
   async getOne(id: number) {
     return await this.statisticsRepository.findOne(id);
+  }
+
+  async updateOne(id: number, dto: UpdateStatisticsDto) {
+    const found = await this.statisticsRepository.findOne(id);
+    if (!found) {
+      return Errors.ENTITY_NOT_FOUND.throw();
+    }
+    Object.assign(found, {
+      ...{
+        ...found,
+        ...dto,
+      },
+    });
+    return await this.statisticsRepository.save(found);
+  }
+
+  async deleteOne(id: number) {
+    return await this.statisticsRepository.delete(id);
   }
 }

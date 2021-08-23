@@ -23,12 +23,13 @@ export class StatisticsModel {
   @Column()
   deaths: number;
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   lastChange: Date;
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   lastUpdate: Date;
-
-  @Column()
-  isRecent: boolean;
 }

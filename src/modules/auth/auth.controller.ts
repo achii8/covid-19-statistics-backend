@@ -14,8 +14,8 @@ export class AuthController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  async omg() {
-    console.log('you know u that bticj');
+  async testGuard() {
+    console.log('welcome :)');
     return null;
   }
 }

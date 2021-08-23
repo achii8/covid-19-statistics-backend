@@ -6,7 +6,7 @@ import { ConfigurationModule } from '../config/configuration.module';
 import { StatisticsModule } from '../statistics/statistics.module';
 
 @Module({
-  imports: [DBModule, ConfigurationModule, HttpModule],
+  imports: [DBModule, ConfigurationModule, HttpModule, StatisticsModule],
   exports: [CountryService],
   controllers: [CountryController],
   providers: [CountryService],

@@ -7,6 +7,7 @@ import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CountryModule } from './modules/country/country.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { StatisticsModule } from './modules/statistics/statistics.module';
     AuthModule,
     CountryModule,
     StatisticsModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],

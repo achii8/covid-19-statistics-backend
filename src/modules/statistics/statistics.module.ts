@@ -1,4 +1,4 @@
-import { HttpModule, Module } from '@nestjs/common';
+import { forwardRef, HttpModule, Module } from '@nestjs/common';
 import { StatisticsController } from './statistics.controller';
 import { StatisticsService } from './statistics.service';
 import { DBModule } from '../db/db.module';
@@ -6,7 +6,12 @@ import { ConfigurationModule } from '../config/configuration.module';
 import { CountryModule } from '../country/country.module';
 
 @Module({
-  imports: [DBModule, ConfigurationModule, HttpModule, CountryModule],
+  imports: [
+    DBModule,
+    ConfigurationModule,
+    HttpModule,
+    forwardRef(() => CountryModule),
+  ],
   exports: [StatisticsService],
   controllers: [StatisticsController],
   providers: [StatisticsService],
