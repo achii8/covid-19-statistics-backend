@@ -1,5 +1,6 @@
 import { IsObject, IsString, IsOptional, IsNumber } from 'class-validator';
 import { countryName } from '../../db/entities/country.entity';
+import { StatisticsModel } from '../../db/entities/statistics.entity';
 
 export class UpdateCountryDto {
   @IsString()
@@ -12,5 +13,5 @@ export class UpdateCountryDto {
 
   @IsObject()
   @IsOptional()
-  statistics?: any;
+  statistics?: StatisticsModel;
 }

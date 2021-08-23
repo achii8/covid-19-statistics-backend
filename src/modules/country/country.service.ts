@@ -13,6 +13,7 @@ import { StatisticsService } from '../statistics/statistics.service';
 import { UpdateCountryDto } from './dto/update-country.dto';
 import { Errors } from 'src/error/errors';
 import { OrderByEnum, StatisticsQueryDto } from './dto/statistics-query.dto';
+import { CreateCountryDto } from './dto/create-country.dto';
 
 @Injectable()
 export class CountryService implements OnModuleInit {
@@ -42,6 +43,10 @@ export class CountryService implements OnModuleInit {
           await this.statisticsService.getStatistics(res.data);
         });
     }
+  }
+
+  async createOne(dto: CreateCountryDto) {
+    await this.countryRepository.save(dto);
   }
 
   async fetchAll(query: StatisticsQueryDto): Promise<Array<CountryModel>> {
@@ -83,6 +88,7 @@ export class CountryService implements OnModuleInit {
   async getOne(code: string) {
     return await this.countryRepository.findOne({ code: code });
   }
+
   async updateOne(code: string, dto: UpdateCountryDto) {
     const foundCountry = await this.countryRepository.findOne({ code: code });
     if (!foundCountry) {
@@ -96,5 +102,9 @@ export class CountryService implements OnModuleInit {
     });
     console.log(foundCountry);
     return await this.countryRepository.save(foundCountry);
+  }
+
+  async deleteOne(code: string) {
+    return await this.countryRepository.delete(code);
   }
 }

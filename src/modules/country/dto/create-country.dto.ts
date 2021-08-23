@@ -1,5 +1,6 @@
 import { countryName } from '../../db/entities/country.entity';
-import { IsString, IsObject } from 'class-validator';
+import { IsString, IsObject, IsOptional } from 'class-validator';
+import { StatisticsModel } from '../../db/entities/statistics.entity';
 
 export class CreateCountryDto {
   @IsString()
@@ -7,4 +8,8 @@ export class CreateCountryDto {
 
   @IsObject()
   name: countryName;
+
+  @IsObject()
+  @IsOptional()
+  statistics: StatisticsModel;
 }
