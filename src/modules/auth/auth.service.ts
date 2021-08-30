@@ -32,7 +32,15 @@ export class AuthService {
     if (!userToAttempt) {
       throw new HttpException('entity not found', 404);
     }
-    return this.createJwtPayload(dto);
+    const response = await this.createJwtPayload(dto);
+    return {
+      token: response.token,
+      userData: {
+        firstName: userToAttempt.firstName,
+        lastName: userToAttempt.lastName,
+        email: userToAttempt.email,
+      },
+    };
   }
 
   async createJwtPayload(user: LoginUserDto) {
@@ -58,7 +66,9 @@ export class AuthService {
   async getSessionFromJwtToken(jwtToken: string): Promise<ISession> {
     const tokenInfo = this.jwtService.decode(jwtToken);
     try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore
+      //#fixme
       const email = tokenInfo.email;
       const session = await this.getUserSessionByMail(email);
       return session as any;

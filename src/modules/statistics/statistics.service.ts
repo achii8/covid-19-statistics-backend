@@ -41,6 +41,8 @@ export class StatisticsService {
         },
         params: {
           code: allCountries[currentIndex].code,
+          //fixme: date param doesn't give me current day statistics :(
+          //date: '2021-08-30',
         },
       })
       .toPromise()
@@ -86,11 +88,12 @@ export class StatisticsService {
     if (allCountries.length - 1 > currentIndex) {
       setTimeout(async () => {
         await this.getStatistics(allCountries, ++currentIndex);
+        //fixme: happens error when ms is less than 2000
       }, 2000);
     }
   }
 
-  @Cron('0 28 * * * *')
+  @Cron('0 0 * * * *')
   async fetchStatistics() {
     const allCountries = await this.countryService.fetchAll({});
     await this.getStatistics(allCountries);

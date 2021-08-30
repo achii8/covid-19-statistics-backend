@@ -43,7 +43,9 @@ export class UserService {
       },
       to: user.email,
     });
-    return createdUser;
+    return {
+      success: true,
+    };
   }
 
   async findOneByEmail(email: string) {
@@ -54,6 +56,7 @@ export class UserService {
   }
 
   async confirmUser(token: string) {
+    console.log('token', token);
     const foundUser = await this.userRepository.findOne({
       validationToken: token,
     });
@@ -62,33 +65,13 @@ export class UserService {
     }
     foundUser.isVerified = true;
     foundUser.validationToken = null;
-    return await this.userRepository.save(foundUser);
+    const resp = await this.userRepository.save(foundUser);
+    if (resp) {
+      return {
+        success: true,
+      };
+    } else {
+      Errors.INTERNAL_SERVER_ERROR.throw();
+    }
   }
-  // async validateUser(userData: ValidateUserDto){
-  //   const filter = {validationToken: userData.validationToken, pin: userData.pin};
-  //   const update = {isVerified: true, validationToken: '', pin: -1}
-  //   const resp = await this.userRepository.findOneAndUpdate(filter, update, {
-  //     new: true
-  //   })
-  //   if(resp){
-  //     return {
-  //       success: true,
-  //       user: resp
-  //     }
-  //   }
-  //   else{
-  //     throw new HttpException("INVALID PARAMETERS", 422)
-  //   }
-  // }
-  // async findOneByEmail(email: string){
-  //   return this.userModel.findOne({email: email, isVerified: true}).select("password").exec();
-  // }
-  // async findOneById(id: string){
-  //   const response = await this.userModel.findOne({id: id}).exec();
-  //   return response;
-  // }
-  // async findAll(): Promise<User[]> {
-  //   const response = await this.userModel.find()
-  //   return response;
-  // }
 }

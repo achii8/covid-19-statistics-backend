@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { LoginUserDto } from './dto/login-user.dto';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -12,10 +13,9 @@ export class AuthController {
     return await this.authService.validateUserByPassword(loginUserDto);
   }
 
-  @Get()
+  @Get('principal')
   @UseGuards(JwtAuthGuard)
-  async testGuard() {
-    console.log('welcome :)');
-    return null;
+  async principal(@Req() req: Request) {
+    return true;
   }
 }

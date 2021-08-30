@@ -21,7 +21,6 @@ export class CountryController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async createCountry(@Body() dto: CreateCountryDto) {
-    // return await this.countryService
     return await this.countryService.createOne(dto);
   }
 

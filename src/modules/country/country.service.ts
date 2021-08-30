@@ -100,7 +100,6 @@ export class CountryService implements OnModuleInit {
         ...dto,
       },
     });
-    console.log(foundCountry);
     return await this.countryRepository.save(foundCountry);
   }
 
